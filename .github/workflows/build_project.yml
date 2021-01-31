@@ -1,0 +1,45 @@
+# Reference: <https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions>
+
+
+# Workflow label
+name: Build project
+
+# Workflow trigger
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+# Workflow tasks
+jobs:
+  build:
+    name: Build
+    if: startsWith(github.event.head_commit.message, 'minor') != true
+    strategy:
+      matrix:
+        toolchain:
+          - stable
+          - nightly
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v2 # https://github.com/marketplace/actions/checkout
+      - name: Cache build
+        uses: actions/cache@v2  # https://github.com/marketplace/actions/cache
+        with:
+          path: target
+          key: cargo-build-target-${{ matrix.toolchain }}-${{ hashFiles('**/Cargo.toml') }}
+      - name: Select rust toolchain
+        uses: actions-rs/toolchain@v1 # https://github.com/marketplace/actions/rust-toolchain
+        with:
+          toolchain: ${{ matrix.toolchain }}
+          profile: minimal
+          default: true
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose

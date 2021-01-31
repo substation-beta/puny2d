@@ -1,0 +1,54 @@
+[package]
+# Project information
+name = "puny2d"
+version = "0.0.1"
+authors = ["Christoph 'Youka' Spanknebel"]
+description = "Rusty 2d graphics software renderer library."
+# Project type
+edition = "2018"
+# Documentation
+keywords = ["2d", "graphics", "software", "renderer"]
+categories = ["graphics", "multimedia::images"]
+readme = "README.md"
+license = "Apache-2.0"
+repository = "https://github.com/substation-beta/puny2d"
+# Don't package development resources
+exclude = ["tests/**/*", "benches/**/*"]
+
+[lib]
+# Compile to Rust static library
+crate-type = ["rlib"]
+# Documentation embedded code doesn't need tests
+doctest = false
+
+[profile.release]
+# Link-time-optimization for smaller binaries but longer build time
+lto = true
+# Just one build thread (=no parallel building) but chance for additional optimization
+codegen-units = 1
+# No expensive stack unwinding, release should be safe and without bloating
+panic = "abort"
+
+[[bench]]
+# File to execute
+name = "rendering_benches"
+
+[features]
+# Acceleration by General-Purpose-GPU
+gpgpu = ["ocl"]
+
+[dependencies]
+# Fonts & text
+font-loader = "~0.11.0"   # https://crates.io/crates/font-loader
+rusttype = "~0.9.2"  # https://crates.io/crates/rusttype
+glyph_brush_layout = "~0.2.1"   # https://crates.io/crates/glyph_brush_layout
+# Acceleration
+lru = "~0.6.4" # https://crates.io/crates/lru
+rayon = "~1.5.0"    # https://crates.io/crates/rayon
+ocl = {version = "~0.19.3", optional = true} # https://crates.io/crates/ocl
+
+[dev-dependencies]
+# Profiling
+microbench = "~0.5.0"   # https://crates.io/crates/microbench
+# Render target
+image = "~0.23.13"   # https://crates.io/crates/image
