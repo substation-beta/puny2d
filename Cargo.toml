@@ -12,8 +12,6 @@ categories = ["graphics", "multimedia::images"]
 readme = "README.md"
 license = "Apache-2.0"
 repository = "https://github.com/substation-beta/puny2d"
-# Don't package development resources
-exclude = ["tests/**/*", "benches/**/*"]
 
 [lib]
 # Compile to Rust static library
