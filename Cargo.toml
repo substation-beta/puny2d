@@ -32,6 +32,8 @@ panic = "abort"
 [[bench]]
 # File to execute
 name = "rendering_benches"
+# Disable standard benchmarking harness in favor of microbench
+harness = false
 
 [features]
 # Acceleration by General-Purpose-GPU
