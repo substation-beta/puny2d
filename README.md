@@ -4,8 +4,7 @@
 _WIP_
 
 ## Build
-* Compile (software-only): `cargo build --release`
-* Compile (with gpu support): `cargo build --release --features "gpgpu"`
+* Compile: `cargo build --release`
 * Unit tests: `cargo test`
 * Benchmark tests: `cargo bench`
 * Documentation generation: `cargo doc --no-deps`

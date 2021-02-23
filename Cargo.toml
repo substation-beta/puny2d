@@ -1,7 +1,7 @@
 [package]
 # Project information
 name = "puny2d"
-version = "0.0.1"
+version = "0.0.2"
 authors = ["Christoph 'Youka' Spanknebel"]
 description = "Rusty 2d graphics software renderer library."
 # Project type
@@ -33,10 +33,6 @@ name = "rendering_benches"
 # Disable standard benchmarking harness in favor of microbench
 harness = false
 
-[features]
-# Acceleration by General-Purpose-GPU
-gpgpu = ["ocl"]
-
 [dependencies]
 # Fonts & text
 font-loader = "~0.11.0"   # https://crates.io/crates/font-loader
@@ -45,7 +41,6 @@ glyph_brush_layout = "~0.2.1"   # https://crates.io/crates/glyph_brush_layout
 # Acceleration
 lru = "~0.6.4" # https://crates.io/crates/lru
 rayon = "~1.5.0"    # https://crates.io/crates/rayon
-ocl = {version = "~0.19.3", optional = true} # https://crates.io/crates/ocl
 
 [dev-dependencies]
 # Profiling
