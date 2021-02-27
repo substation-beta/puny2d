@@ -1,12 +1,8 @@
 mod font_tests {
     // Imports
     use font_loader::system_fonts;
-    use rusttype::{point, Font, PositionedGlyph, Scale};
-    use image::{GrayAlphaImage, LumaA};
-    use std::{
-        path::Path,
-        u8::MAX as u8MAX
-    };
+    use std::fmt::Write;
+    use ttf_parser::{Face, OutlineBuilder, Rect};
 
     // Native font (post-installed on linux)
     const TEST_FONT: &str = "Arial";
@@ -41,49 +37,50 @@ mod font_tests {
     }
 
     #[test]
-    fn test_text_image() {
+    fn test_glyph_outline() {
         // Load font (regular)
         let (data, _) = system_fonts::get(
             &system_fonts::FontPropertyBuilder::new().family(TEST_FONT).build()
         ).expect("Regular font not loadable!");
-
-        // See <https://gitlab.redox-os.org/redox-os/rusttype/blob/master/examples/simple.rs>
-
-        // Construct font object
-        let font = Font::try_from_vec(data).expect("Font data should be valid!");
-        // Font size
-        let font_scale = Scale::uniform(54.7);
-        // Get glyphs from text (as vector to not consume items by reading)
-        let baseline_point = point(0.0, font.v_metrics(font_scale).ascent); // Glyphs render upwards, so we need a fitting baseline
-        let glyphs = font.layout("ssb_renderer", font_scale, baseline_point).collect::<Vec<PositionedGlyph<'_>>>();
-        // Calculate text bounding by pixels
-        let pixel_height = font_scale.y.ceil() as u32;
-        let pixel_width = if let Some(last_glyph) = glyphs.last() {
-            (
-                last_glyph.position().x +
-                last_glyph.unpositioned().h_metrics().advance_width
-            ).ceil() as u32
-            + 1 // Pass last pixel to get real width
-        } else {
-            0
-        };
-        // Fill image pixels
-        let mut text_image = GrayAlphaImage::new(pixel_width, pixel_height);
-        for glyph in glyphs {
-            if let Some(glyph_bounding) = glyph.pixel_bounding_box() {
-                glyph.draw(|x, y, opacity| {
-                    text_image.put_pixel(
-                        glyph_bounding.min.x as u32 + x,
-                        glyph_bounding.min.y as u32 + y,
-                        LumaA( [u8MAX >> 1, (opacity * u8MAX as f32) as u8] )
-                    );
-                });
+        // Load first face from font
+        let face = Face::from_slice(&data, 0).expect("Font should have at least one face.");
+        // Get glyph index of 'i' in face
+        let glyph_index_i = face.glyph_index('i').expect("Font doesn't contain character 'i'!?");
+        // Get glyph outline as svg string
+        struct SVGBuilder(String);
+        impl ttf_parser::OutlineBuilder for SVGBuilder {
+            fn move_to(&mut self, x: f32, y: f32) {
+                write!(&mut self.0, "M {} {} ", x, y).expect("Couldn't write 'move'!");
+            }
+            fn line_to(&mut self, x: f32, y: f32) {
+                write!(&mut self.0, "L {} {} ", x, y).expect("Couldn't write 'line'!");
+            }
+            fn quad_to(&mut self, x1: f32, y1: f32, x: f32, y: f32) {
+                write!(&mut self.0, "Q {} {} {} {} ", x1, y1, x, y).expect("Couldn't write 'quadratic curve'!");
+            }
+            fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) {
+                write!(&mut self.0, "C {} {} {} {} {} {} ", x1, y1, x2, y2, x, y).expect("Couldn't write 'cubic curve'!");
+            }
+            fn close(&mut self) {
+                write!(&mut self.0, "Z ").expect("Couldn't write 'close'!");
             }
         }
-        // Save image
-        text_image.save(
-            Path::new(&env!("CARGO_MANIFEST_DIR"))
-            .join("target/text_image.png")
-        ).expect("Image saving failed!");
+        let mut builder = SVGBuilder(String::new());
+        let glyph_bounding = face.outline_glyph(glyph_index_i, &mut builder).expect("Glyph had no outline or parse error!");
+        // Check glyph outline
+        assert_eq!(
+            builder.0,
+            "M 136 1259 L 136 1466 L 316 1466 L 316 1259 L 136 1259 Z M 136 0 L 136 1062 L 316 1062 L 316 0 L 136 0 Z "
+        );
+        assert_eq!(
+            glyph_bounding,
+            Rect {
+                x_min: 136,
+                y_min: 0,
+                x_max: 316,
+                y_max: 1466
+            }
+        );
+        assert!(face.ascender() >= glyph_bounding.y_max, "Glyph 'i' shouldn't be outside ascent space!");
     }
 }
