@@ -46,31 +46,46 @@ mod font_tests {
         let face = Face::from_slice(&data, 0).expect("Font should have at least one face.");
         // Get glyph index of 'i' in face
         let glyph_index_i = face.glyph_index('i').expect("Font doesn't contain character 'i'!?");
-        // Get glyph outline as svg string
-        struct SVGBuilder(String);
-        impl ttf_parser::OutlineBuilder for SVGBuilder {
-            fn move_to(&mut self, x: f32, y: f32) {
-                write!(&mut self.0, "M {} {} ", x, y).expect("Couldn't write 'move'!");
+        // Glyph outline builder
+        struct SVGBuilder {
+            svg: String,
+            ascend: f32
+        }
+        impl SVGBuilder {
+            pub fn new(ascend: i16) -> Self {
+                Self {
+                    svg: String::new(),
+                    ascend: ascend as f32
+                }
             }
-            fn line_to(&mut self, x: f32, y: f32) {
-                write!(&mut self.0, "L {} {} ", x, y).expect("Couldn't write 'line'!");
-            }
-            fn quad_to(&mut self, x1: f32, y1: f32, x: f32, y: f32) {
-                write!(&mut self.0, "Q {} {} {} {} ", x1, y1, x, y).expect("Couldn't write 'quadratic curve'!");
-            }
-            fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) {
-                write!(&mut self.0, "C {} {} {} {} {} {} ", x1, y1, x2, y2, x, y).expect("Couldn't write 'cubic curve'!");
-            }
-            fn close(&mut self) {
-                write!(&mut self.0, "Z ").expect("Couldn't write 'close'!");
+            pub fn svg(&self) -> &str {
+                &self.svg
             }
         }
-        let mut builder = SVGBuilder(String::new());
+        impl ttf_parser::OutlineBuilder for SVGBuilder {
+            fn move_to(&mut self, x: f32, y: f32) {
+                write!(&mut self.svg, "M {} {} ", x, -y + self.ascend).expect("Couldn't write 'move'!");
+            }
+            fn line_to(&mut self, x: f32, y: f32) {
+                write!(&mut self.svg, "L {} {} ", x, -y + self.ascend).expect("Couldn't write 'line'!");
+            }
+            fn quad_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32) {
+                write!(&mut self.svg, "Q {} {} {} {} ", x1, -y1 + self.ascend, x2, -y2 + self.ascend).expect("Couldn't write 'quadratic curve'!");
+            }
+            fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x3: f32, y3: f32) {
+                write!(&mut self.svg, "C {} {} {} {} {} {} ", x1, -y1 + self.ascend, x2, -y2 + self.ascend, x3, -y3 + self.ascend).expect("Couldn't write 'cubic curve'!");
+            }
+            fn close(&mut self) {
+                write!(&mut self.svg, "Z ").expect("Couldn't write 'close'!");
+            }
+        }
+        // Get glyph outline as svg string
+        let mut builder = SVGBuilder::new(face.ascender());
         let glyph_bounding = face.outline_glyph(glyph_index_i, &mut builder).expect("Glyph had no outline or parse error!");
         // Check glyph outline
         assert_eq!(
-            builder.0,
-            "M 136 1259 L 136 1466 L 316 1466 L 316 1259 L 136 1259 Z M 136 0 L 136 1062 L 316 1062 L 316 0 L 136 0 Z "
+            builder.svg(),
+            "M 136 595 L 136 388 L 316 388 L 316 595 L 136 595 Z M 136 1854 L 136 792 L 316 792 L 316 1854 L 136 1854 Z "
         );
         assert_eq!(
             glyph_bounding,
@@ -81,6 +96,6 @@ mod font_tests {
                 y_max: 1466
             }
         );
-        assert!(face.ascender() >= glyph_bounding.y_max, "Glyph 'i' shouldn't be outside ascent space!");
+        assert!(face.ascender() >= glyph_bounding.y_max, "Glyph 'i' shouldn't be outside ascent space: {}", face.ascender());
     }
 }
