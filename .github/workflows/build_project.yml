@@ -13,6 +13,10 @@ on:
     branches:
       - master
 
+# Workflow global environment
+env:
+  RUST_BACKTRACE: 1
+
 # Workflow tasks
 jobs:
   build:
@@ -49,3 +53,8 @@ jobs:
         run: echo ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true | sudo debconf-set-selections && sudo apt-get install -y ttf-mscorefonts-installer
       - name: Run tests
         run: cargo test --verbose
+      - name: Report test coverage
+        if: startsWith(matrix.os, 'ubuntu') && matrix.toolchain == 'stable'
+        run: sudo -E bash .scripts/kcov.sh
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
