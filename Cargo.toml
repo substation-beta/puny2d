@@ -27,6 +27,11 @@ codegen-units = 1
 # No expensive stack unwinding, release should be safe and without bloating
 panic = "abort"
 
+[features]
+default = ["text"]
+# Text support
+text = ["font-loader", "ttf-parser"]
+
 [[bench]]
 # File to execute
 name = "rendering_benches"
@@ -35,13 +40,13 @@ harness = false
 
 [dependencies]
 # Fonts
-font-loader = "~0.11.0"   # https://crates.io/crates/font-loader
-ttf-parser = "~0.12.0"   # https://crates.io/crates/ttf-parser
+font-loader = {version = "~0.11.0", optional = true}   # https://crates.io/crates/font-loader
+ttf-parser = {version = "~0.12.0", optional = true}   # https://crates.io/crates/ttf-parser
 # Images
 png = "~0.16.8" # https://crates.io/crates/png
 # Acceleration
-lru = "~0.6.4" # https://crates.io/crates/lru
-rayon = "~1.5.0"    # https://crates.io/crates/rayon
+lru = "~0.6.5" # https://crates.io/crates/lru
+rayon = "~1.5.1"    # https://crates.io/crates/rayon
 
 [dev-dependencies]
 # Profiling

@@ -1,3 +1,4 @@
+#[cfg(feature = "text")]
 mod font_tests {
     // Imports
     use font_loader::system_fonts;
