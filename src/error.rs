@@ -38,5 +38,6 @@ mod tests {
     #[test]
     fn graphics_error() {
         assert_eq!(GraphicsError::new("Not enough!").to_string(), "Not enough!");
+        assert_eq!(format!("{:?}", GraphicsError::new("Wrong format!")), "GraphicsError { msg: \"Wrong format!\" }");
     }
 }

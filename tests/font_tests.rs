@@ -63,7 +63,7 @@ mod font_tests {
                 &self.svg
             }
         }
-        impl ttf_parser::OutlineBuilder for SVGBuilder {
+        impl OutlineBuilder for SVGBuilder {
             fn move_to(&mut self, x: f32, y: f32) {
                 write!(&mut self.svg, "M {} {} ", x, -y + self.ascend).expect("Couldn't write 'move'!");
             }
